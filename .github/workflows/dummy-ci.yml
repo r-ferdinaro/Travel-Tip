@@ -1,8 +1,10 @@
-name: Status Check
-on: [pull_request]
+name: PR Check
+on:
+  pull_request:
+    branches: [main]
 jobs:
-  check:
+  up-to-date:
+    name: up-to-date
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: echo "Status check passed"
+      - run: echo "ok"
