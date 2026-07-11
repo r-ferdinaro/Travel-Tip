@@ -45,7 +45,7 @@ function renderLocs(locs) {
         <li class="loc ${className}" data-id="${id}">
             <h4>  
                 <span>${name}</span>
-                ${distance}
+                <span>${distance}</span>
                 <span title="${rate} stars">${'★'.repeat(rate)}</span>
             </h4>
             <p class="muted">
@@ -75,7 +75,7 @@ function renderLocs(locs) {
 
 function getDistanceTxt(geo) {
     if (!gUserPos) return ''
-    return `<span>Distance: ${utilService.getDistance(geo, gUserPos, 'K')} KM</span>`
+    return `Distance: ${utilService.getDistance(geo, gUserPos, 'K')} KM`
 }
 
 function onRemoveLoc(locId) {
@@ -182,6 +182,8 @@ function onSelectLoc(locId) {
 
 function displayLoc(loc) {
     console.log(loc)
+    const distance = getDistanceTxt(loc.geo)
+
     document.querySelector('.loc.active')?.classList?.remove('active')
     document.querySelector(`.loc[data-id="${loc.id}"]`).classList.add('active')
 
@@ -190,6 +192,7 @@ function displayLoc(loc) {
 
     const el = document.querySelector('.selected-loc')
     el.querySelector('.loc-name').innerText = loc.name
+    el.querySelector('.loc-distance').innerText = distance
     el.querySelector('.loc-address').innerText = loc.geo.address
     el.querySelector('.loc-rate').innerHTML = '★'.repeat(loc.rate)
     el.querySelector('[name=loc-copier]').value = window.location
