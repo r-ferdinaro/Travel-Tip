@@ -2,6 +2,8 @@ import { utilService } from './services/util.service.js'
 import { locService } from './services/loc.service.js'
 import { mapService } from './services/map.service.js'
 
+let gUserPos = null
+
 window.onload = onInit
 
 // To make things easier in this project structure 
@@ -35,24 +37,27 @@ function onInit() {
 function renderLocs(locs) {
     const selectedLocId = getLocIdFromQueryParams()
 
-    var strHTML = locs.map(loc => {
-        const className = (loc.id === selectedLocId) ? 'active' : ''
+    var strHTML = locs.map(({id, name, rate, createdAt, updatedAt, geo}) => {
+        const className = (id === selectedLocId) ? 'active' : ''
+        const distance = getDistanceTxt(geo)
+
         return `
-        <li class="loc ${className}" data-id="${loc.id}">
+        <li class="loc ${className}" data-id="${id}">
             <h4>  
-                <span>${loc.name}</span>
-                <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
+                <span>${name}</span>
+                <span>${distance}</span>
+                <span title="${rate} stars">${'★'.repeat(rate)}</span>
             </h4>
             <p class="muted">
-                Created: ${utilService.elapsedTime(loc.createdAt)}
-                ${(loc.createdAt !== loc.updatedAt) ?
-                ` | Updated: ${utilService.elapsedTime(loc.updatedAt)}`
+                Created: ${utilService.elapsedTime(createdAt)}
+                ${(createdAt !== updatedAt) ?
+                ` | Updated: ${utilService.elapsedTime(updatedAt)}`
                 : ''}
             </p>
             <div class="loc-btns">     
-               <button title="Delete" onclick="app.onRemoveLoc('${loc.id}')">🗑️</button>
-               <button title="Edit" onclick="app.onUpdateLoc('${loc.id}')">✏️</button>
-               <button title="Select" onclick="app.onSelectLoc('${loc.id}')">🗺️</button>
+               <button title="Delete" onclick="app.onRemoveLoc('${id}')">🗑️</button>
+               <button title="Edit" onclick="app.onUpdateLoc('${id}')">✏️</button>
+               <button title="Select" onclick="app.onSelectLoc('${id}')">🗺️</button>
             </div>     
         </li>`}).join('')
 
@@ -66,6 +71,11 @@ function renderLocs(locs) {
         displayLoc(selectedLoc)
     }
     document.querySelector('.debug').innerText = JSON.stringify(locs, null, 2)
+}
+
+function getDistanceTxt(geo) {
+    if (!gUserPos) return ''
+    return `Distance: ${utilService.getDistance(geo, gUserPos, 'K')} KM`
 }
 
 function onRemoveLoc(locId) {
@@ -129,6 +139,7 @@ function loadAndRenderLocs() {
 function onPanToUserPos() {
     mapService.getUserPosition()
         .then(latLng => {
+            gUserPos = latLng
             mapService.panTo({ ...latLng, zoom: 15 })
             unDisplayLoc()
             loadAndRenderLocs()
@@ -171,6 +182,8 @@ function onSelectLoc(locId) {
 
 function displayLoc(loc) {
     console.log(loc)
+    const distance = getDistanceTxt(loc.geo)
+
     document.querySelector('.loc.active')?.classList?.remove('active')
     document.querySelector(`.loc[data-id="${loc.id}"]`).classList.add('active')
 
@@ -181,6 +194,7 @@ function displayLoc(loc) {
     el.querySelector('.loc-name').innerText = loc.name
     el.querySelector('.loc-address').innerText = loc.geo.address
     el.querySelector('.loc-rate').innerHTML = '★'.repeat(loc.rate)
+    el.querySelector('.loc-distance').innerText = distance
     el.querySelector('[name=loc-copier]').value = window.location
     el.classList.add('show')
 
